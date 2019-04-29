@@ -237,7 +237,7 @@ if __name__ == "__main__":
     # 源数据集路径
     dirs_src = "data/sougoudataset"
     # 分词后的存储路径
-    output_src = "data/pynlpir"
+    output_src = "data/jieba"
     # 停用词
     stop_words_src = "data/stopwords.txt"
     # 词典的存储路径

@@ -7,19 +7,6 @@ from datetime import timedelta
 from data_process import Data
 import tensorflow.contrib.keras as kr
 
-categories = {
-            "体育": 0,
-            "娱乐": 1,
-            "彩票": 2,
-            "教育": 3,
-            "时尚": 4,
-            "社会": 5,
-            "科技": 6,
-            "股票": 7,
-            "财经": 8
-        }
-name = ["体育", "娱乐", "彩票", "教育", "时尚", "社会", "科技", "股票", "财经"]
-
 
 def get_time_dif(start_time):
     """获取已使用时间"""
@@ -118,7 +105,7 @@ def test(x_src, y_src, result_src):
 
 if __name__ == "__main__":
     # 模型路径
-    model_save_src = "fudandata/text_cnn_model"
+    model_save_src = "ndata/text_cnn_model"
     num_category = 9
     x_src = "data/vectorized_data/test/x.npy"
     y_src = "data/vectorized_data/test/y.npy"
