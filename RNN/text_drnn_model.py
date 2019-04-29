@@ -6,8 +6,8 @@ class TDRNNConfig(object):
 
     # 模型参数
     embedding_dim = 64     # 词向量维度
-    seq_length = 600       # 序列长度
-    num_classes = 2        # 类别数
+    seq_length = 200       # 序列长度
+    num_classes = 9        # 类别数
     vocab_size = None       # 词汇表达小
 
     hidden_dim = 128        # 隐藏层神经元
@@ -58,6 +58,7 @@ class TDRNN(object):
             hidden_list = []
             # 在每个sequence左部padding，为了保证dynamic最后一个step的输出不受padding的影响
             input_padded = tf.pad(self.embedding_dropout, paddings=[[0, 0], [config.k_val - 1, 0], [0, 0]])
+            # gru_cell = self.dropout()
             for start in range(config.seq_length):
 
                 end = start + config.k_val
