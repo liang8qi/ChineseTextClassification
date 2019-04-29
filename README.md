@@ -1,19 +1,19 @@
 # ChineseTextClassification
 Several methods to solve text classification problems
-## 前言
+## 1、前言
 刚开始接触NLP，选择从最基础的文本分类入手，完全小白一个，一开始连如何处理数据都不知道，
 TensorFlow也不会，在写代码的过程中，也参考了很多别人的代码，尤其感谢[gaussic](https://github.com/gaussic/text-classification-cnn-rnn)
 ，他的代码给了我很大很大的帮助。
 
 PS.很多细节没补充，有时间会继续补充。
 
-## 环境
+## 2、环境
 + Python3.6
 + TensorFlow 1.3
 + numpy
 + scikit-learn
 + jieba
-## 数据集
+## 3、数据集
 ### THUCNews
 THUCNews是根据新浪新闻RSS订阅频道2005~2011年间的历史数据筛选过滤生成，本次实验选取体育, 财经, 家居, 教育, 科技, 时尚, 时政, 游戏, 娱乐共9个类别，每个类别选取5000个样本。
 ### 复旦中文文本分类语料
@@ -46,7 +46,7 @@ Military | 66 | 8 | 76
 Electronics	| 24 | 3 | 28
 Medical | 45 | 6 | 53
 
-##模型介绍
+## 4、模型介绍
 所有模型都没使用预训练的词向量，参数也没有仔细调过，模型性能未达到最优，结果仅供参考。
 ### SVM 
 去掉低频词（频率低于3），使用信息增益选择特征词，然后用TF-IDF作为权重，使用scikit-learn的SVC模型训练。
@@ -82,7 +82,7 @@ SoftMax。
 [Disconnected Recurrent Neural Networks for Text Categorization](https://www.aclweb.org/anthology/papers/P/P18/P18-1215/)
 感觉自己复现的有些问题，还在改进中，不过目前发现这个模型在处理长文本时，非常耗时。
 
-## 实验结果
+## 5、实验结果
 + THUCNews
 ![THUCNews](https://github.com/DrLiLiang/ChineseTextClassification/blob/master/picture/THUNewsResults.png)
 
