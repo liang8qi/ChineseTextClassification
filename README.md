@@ -5,7 +5,7 @@ Several methods to solve text classification problems
 TensorFlow也不会，在写代码的过程中，也参考了很多别人的代码，尤其感谢[gaussic](https://github.com/gaussic/text-classification-cnn-rnn)
 ，他的代码给了我很大很大的帮助。
 
-PS.很多细节没补充，有时间会继续补充。
+PS.很多细节没补充，上传的文件可能也有问题，有时间会继续补充、改正，欢迎提交issue。
 
 ## 2、环境
 + Python3.6
