@@ -91,3 +91,6 @@ SoftMax。
 + 复旦中文文本分类语料
 ![复旦中文文本分类语料](https://github.com/DrLiLiang/ChineseTextClassification/blob/master/picture/FuDanResults.png)
 
+**最后两行带\*号的为[Recurrent Convolutional Neural Networks for Text Classification](https://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/viewPaper/9745)。
+这篇论文中作者使用CNN和RCNN得到结果（作者使用了预训练的词向量）**
+
