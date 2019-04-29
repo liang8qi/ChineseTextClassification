@@ -86,8 +86,8 @@ SoftMax。
 + THUCNews
 ![THUCNews](https://github.com/DrLiLiang/ChineseTextClassification/blob/master/picture/THUNewsResults.png)
 
-Error-RCNN是我一开始复现RCNN的时候，错误的将BiLSTM的一层MLP理解成卷积层，使用大小为1的window size跑出的结果，竟然比
-使用MLP效果更好，目前不确定是否是偶然因素，会进一步进行实验，寻找原因。
+**Error-RCNN是我一开始复现RCNN的时候，错误的将BiLSTM的一层MLP理解成卷积层，使用大小为1的window size跑出的结果，竟然比
+使用MLP效果更好，目前不确定是否是偶然因素，会进一步进行实验，寻找原因。**
 + 复旦中文文本分类语料
 ![复旦中文文本分类语料](https://github.com/DrLiLiang/ChineseTextClassification/blob/master/picture/FuDanResults.png)
 
