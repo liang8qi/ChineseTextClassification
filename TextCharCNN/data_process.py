@@ -1,7 +1,6 @@
 import re
 import os
 import numpy as np
-from collections import Counter
 import tensorflow.contrib.keras as kr
 import random
 categories = {
@@ -33,7 +32,7 @@ class Data(object):
     @staticmethod
     def clean_sentence(sentence):
         # 抽出中文字符
-        sentence = re.sub(r"[^\u4e00-\u9fff()，！？\“\'\：\” ]", " ", sentence)
+        sentence = re.sub(r"[^\u4e00-\u9fff]", " ", sentence)
 
         # 删除两个以上连续空白符
         sentence = re.sub(r"\s{2,}", "", sentence)
@@ -146,22 +145,8 @@ class Data(object):
 
         return contents, labels
 
-    def build_vocab(self, train_src, vocab_src, vocab_size=5000):
-        """
-        data_train, _ = self.read_file(train_src)
-
-        all_data = []
-        for content in data_train:
-            all_data.extend(content)
-
-        counter = Counter(all_data)
-        count_pairs = counter.most_common(vocab_size - 1)
-        words, _ = list(zip(*count_pairs))
-        # 添加一个 <PAD> 来将所有文本pad为同一长度
-        vocab = ['<PAD>'] + list(words)
-        np.save(vocab_src, vocab)
-        print("the size of vocab is {}".format(len(vocab)))
-        """
+    @staticmethod
+    def build_vocab(train_src, vocab_src):
         words = set()
         with open(train_src, encoding='utf-8', errors='ignore') as f:
             for line in f:
@@ -175,8 +160,6 @@ class Data(object):
         np.save(vocab_src, vocab)
         print("the size of vocab is {}".format(len(vocab)))
 
-
-
     # 加载字典
     @staticmethod
     def load_vocab(vocab_src):
@@ -189,22 +172,6 @@ class Data(object):
 
     # 将数据向量化
     def text_vectorization(self, filename, word_to_id, output_src):
-        """
-
-        contents, labels = self.read_file(filename)
-
-        data_id, label_id = [], []
-        for i in range(len(contents)):
-            data_id.append([word_to_id[x] for x in contents[i] if x in word_to_id])
-            label_id.append(labels[i])
-
-        # 使用keras提供的pad_sequences来将文本pad为固定长度
-        x_pad = kr.preprocessing.sequence.pad_sequences(data_id, max_len)
-        y_pad = kr.utils.to_categorical(label_id, num_classes=num_category)  # 将标签转换为one-hot表示 9类
-
-        np.save(os.path.join(output_src, "x_pad.npy"), x_pad)
-        np.save(os.path.join(output_src, "y_pad.npy"), y_pad)
-        """
         data_id, label_id = [], []
         with open(filename, encoding='utf-8', errors='ignore') as f:
             for line in f:
@@ -212,7 +179,6 @@ class Data(object):
                 data_id.append([word_to_id[x] for x in content if x in word_to_id])
                 label_id.append(label)
 
-        # x_pad = kr.preprocessing.sequence.pad_sequences(data_id, max_len)
         y_pad = kr.utils.to_categorical(label_id, num_classes=num_category)  # 将标签转换为one-hot表示 9类
 
         np.save(os.path.join(output_src, "x.npy"), data_id)
@@ -222,7 +188,8 @@ class Data(object):
 
     # 为了方便实验对比，添加一个文件，用于处理分词后的数据和划分好的数据集
     # 只需要将保存的划分好的数据集文件重新处理一遍
-    def load_divided_data_set(self, train_file_list_src, val_file_list_src, test_file_list_src, output_src):
+    @staticmethod
+    def load_divided_data_set(train_file_list_src, val_file_list_src, test_file_list_src, output_src):
         train_file_list = np.load(train_file_list_src)
         val_file_list = np.load(val_file_list_src)
         test_file_list = np.load(test_file_list_src)
@@ -263,41 +230,43 @@ class Data(object):
 
 
 if __name__ == "__main__":
-    """
+
     data = Data()
-
-    # 用于实验的分词后的划分好的数据集文件地址
-    train_file_list_src = ""
-    val_file_list_src = ""
-    test_file_list_src = ""
     # 数据集地址
-    data_set_src = "data/sougoudataset"
-    file_list_src = "data/file_list"
-
+    data_set_src = ""
+    # 存储划分后的数据集文件列表
+    file_list_src = "data/file_dict"
     # 划分数据集
-    # data.divide_data_set(data_set_src, file_list_src, [0.7, 0.1])
-
-    # 重新划分数据集
-    data.load_divided_data_set(train_file_list_src, val_file_list_src, file_list_src, file_list_src)
+    data.divide_data_set(data_set_src, file_list_src, [0.7, 0.1])
 
     # 处理训练集
     train_src = os.path.join(file_list_src, "train")
-    # data.batch_process(os.path.join(file_list_src, "train_file_dict.npy"), train_src)
+    data.batch_process(os.path.join(file_list_src, "train_file_dict.npy"), train_src)
 
     # 在训练集上建立字典
     vocab_src = os.path.join(train_src, "vocab.npy")
-    # data.build_vocab(os.path.join(train_src, "batch.txt"), vocab_src)
+    data.build_vocab(os.path.join(train_src, "batch.txt"), vocab_src)
     vocab, word_to_id = data.load_vocab(vocab_src)
 
     # 训练数据向量化
-    # data.text_vectorization(os.path.join(train_src, "batch.txt"), word_to_id, train_src)
+    data.text_vectorization(os.path.join(train_src, "batch.txt"), word_to_id, train_src)
 
     # 验证数据处理
-    valid_src = os.path.join(file_list_src, "valid")
+    valid_src = os.path.join(file_list_src, "validation")
     data.batch_process(os.path.join(file_list_src, "valid_file_dict.npy"), valid_src)
     # 验证集向量化
     data.text_vectorization(os.path.join(valid_src, "batch.txt"), word_to_id, valid_src)
-    """
+
+    # 测试数据处理
+    test_src = os.path.join(file_list_src, "test")
+    data.batch_process(os.path.join(file_list_src, "valid_file_dict.npy"), test_src)
+    # 测试集向量化
+    data.text_vectorization(os.path.join(test_src, "batch.txt"), word_to_id, test_src)
+
+
+
+
+
 
 
 

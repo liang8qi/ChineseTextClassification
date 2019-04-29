@@ -8,7 +8,7 @@ class CharCNNConfig(object):
     embedding_dim = 64  # 词向量维度
     seq_length = 600  # 序列长度
     num_classes = 9  # 类别数
-    vocab_size = 5000  # 词汇表达小
+    vocab_size = None  # 词汇表达小
     learning_rate = 1e-3  # 学习率
     decay_rate = 0.9  # 学习率衰减率
     decay_steps = 500  # 学习率衰减速率
@@ -18,7 +18,6 @@ class CharCNNConfig(object):
 
     print_per_batch = 10  # 每多少轮输出一次结果
     save_per_batch = 10  # 每多少轮存入tensorboard
-    # keep_dropout_prob = 0.5
 
     # 卷积层
     conv_layers = [[256, 7, 3],
@@ -29,7 +28,7 @@ class CharCNNConfig(object):
                    [256, 3, 3]]
     # 全联接层
     fully_layers_units = [1024, 1024]
-    #
+
     normal_stddev = 0.05
 
 
@@ -78,7 +77,6 @@ class CharCNN(object):
                         tmp = tf.transpose(pooling, [0, 1, 3, 2])
 
         # 将池化的结果拼接
-        # *256
         num_dim = tmp.get_shape()[1].value * tmp.get_shape()[2].value
         # shape [None, num_dim]
         fc_input = tf.reshape(tmp, [-1, num_dim], name="fc_input")

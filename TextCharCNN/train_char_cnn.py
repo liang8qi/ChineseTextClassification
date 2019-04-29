@@ -36,8 +36,9 @@ def batch_iter(x, y, batch_size=128):
     for i in range(num_batch):
         start_id = i * batch_size
         end_id = min((i + 1) * batch_size, data_len)
-        x_paded= kr.preprocessing.sequence.pad_sequences(x_shuffle[start_id:end_id], maxlen=config.seq_length)
-        yield x_paded, y_shuffle[start_id:end_id]
+        x_padded = kr.preprocessing.sequence.pad_sequences(x_shuffle[start_id:end_id], maxlen=config.seq_length,
+                                                           padding="post", truncating="post")
+        yield x_padded, y_shuffle[start_id:end_id]
 
 
 # 评估在某一数据上的准确率和损失
@@ -81,10 +82,10 @@ def train():
 
     # 载入训练集与验证集
     start_time = time.time()
-    x_train = np.load(os.path.join(train_dir, "x.npy"))
+    x_train = np.load(os.path.join(train_dir, "x.npy"), allow_pickle=True)
     y_train = np.load(os.path.join(train_dir, "y.npy"))
     print("the shape of train_x is {}, train_y is {}".format(np.shape(x_train), np.shape(y_train)))
-    x_val = np.load(os.path.join(val_dir, "x.npy"))
+    x_val = np.load(os.path.join(val_dir, "x.npy"), allow_pickle=True)
     y_val = np.load(os.path.join(val_dir, "y.npy"))
     time_dif = get_time_dif(start_time)
     print("Time usage:", time_dif)
@@ -98,7 +99,7 @@ def train():
     total_batch = 0  # 总批次
     best_acc_val = 0.0  # 最佳验证集准确率
     last_improved = 0  # 记录上一次提升批次
-    require_improvement = 1000  # 如果超过1000轮未提升，提前结束训练
+    require_improvement = 200  # 如果超过n iter未提升，提前结束训练
 
     flag = False
     for epoch in range(config.num_epochs):
@@ -148,8 +149,8 @@ def train():
 
 if __name__ == '__main__':
     train_dir = "data/vectorized_data/train"
-    val_dir = "data/vectorized_data/valid"
-    vocab_dir = "data/middle_result/train/vocab.npy"
+    val_dir = "data/vectorized_data/validation"
+    vocab_dir = "data/file_dict/train/vocab.npy"
 
     save_dir = 'data/model2'
 

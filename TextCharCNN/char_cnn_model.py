@@ -10,7 +10,7 @@ class CharCNNConfig(object):
     num_classes = 9  # 类别数
     num_filters = 256  # 卷积核数目
     kernel_size = 5  # 卷积核尺寸
-    vocab_size = 5000  # 词汇表达小
+    vocab_size = None  # 词汇表达小
 
     hidden_dim = 128  # 全连接层神经元
 
@@ -49,13 +49,13 @@ class CharCNN(object):
             embedding = tf.get_variable('embedding', [self.config.vocab_size, self.config.embedding_dim])
             embedding_inputs = tf.nn.embedding_lookup(embedding, self.input_x)
 
-        with tf.name_scope("cnn"):
+        with tf.name_scope("CNNLayer"):
             # CNN layer 256 * 5
             conv = tf.layers.conv1d(embedding_inputs, self.config.num_filters, self.config.kernel_size, name='conv')
             # global max pooling layer
             gmp = tf.reduce_max(conv, reduction_indices=[1], name='gmp')
 
-        with tf.name_scope("softmax"):
+        with tf.name_scope("SoftMaxLayer"):
             # 全连接层，后面接dropout以及relu激活
             # 128
             fc = tf.layers.dense(gmp, self.config.hidden_dim, name='fc1')
@@ -66,7 +66,7 @@ class CharCNN(object):
             self.logits = tf.layers.dense(fc, self.config.num_classes, name='fc2')
             self.y_pred = tf.argmax(tf.nn.softmax(self.logits), 1)  # 预测类别
 
-        with tf.name_scope("optimize"):
+        with tf.name_scope("Optimize"):
             # 损失函数，交叉熵
             cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.input_y)
             self.loss = tf.reduce_mean(cross_entropy)
@@ -78,8 +78,7 @@ class CharCNN(object):
                                                        staircase=True)
             self.opt = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.loss,
                                                                                     global_step=self.global_step)
-
-        with tf.name_scope("accuracy"):
+        with tf.name_scope("Accuracy"):
             # 准确率
             correct_pred = tf.equal(tf.argmax(self.input_y, 1), self.y_pred)
             self.acc = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
