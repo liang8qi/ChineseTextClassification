@@ -76,14 +76,18 @@ Pooling层和Softmax层。
 使用双向LSTM，将每个Step前向和后向的输出拼接起来，送入一个卷积层，然后使用Max Pooling，最后送入
 SoftMax。
 + text_rcnn_model是参考了自动化所NLPR的学生发表在AAAI2015上的一篇文章
-[Recurrent Convolutional Neural Networks for Text Classification](https://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/viewPaper/9745)
+[Recurrent Convolutional Neural Networks for Text Classification](https://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/viewPaper/9745)。
+
 + text_dnn_model参考了哈工大讯飞联合实验室发表在ACL2018上的
 [Disconnected Recurrent Neural Networks for Text Categorization](https://www.aclweb.org/anthology/papers/P/P18/P18-1215/)
 感觉自己复现的有些问题，还在改进中，不过目前发现这个模型在处理长文本时，非常耗时。
 
-##实验结果
+## 实验结果
 + THUCNews
 ![THUCNews](https://github.com/DrLiLiang/ChineseTextClassification/blob/master/picture/THUNewsResults.png)
+
+Error-RCNN是我一开始复现RCNN的时候，错误的将BiLSTM的一层MLP理解成卷积层，使用大小为1的window size跑出的结果，竟然比
+使用MLP效果更好，目前不确定是否是偶然因素，会进一步进行实验，寻找原因。
 + 复旦中文文本分类语料
 ![复旦中文文本分类语料](https://github.com/DrLiLiang/ChineseTextClassification/blob/master/picture/FuDanResults.png)
 
