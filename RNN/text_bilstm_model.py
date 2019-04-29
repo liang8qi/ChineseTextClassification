@@ -7,7 +7,7 @@ class TBiLSTMConfig(object):
     # 模型参数
     embedding_dim = 64     # 词向量维度
     seq_length = 600        # 序列长度
-    num_classes = 20        # 类别数
+    num_classes = 9       # 类别数
     vocab_size = None       # 词汇表达小
     
     hidden_dim = 128        # 隐藏层神经元
@@ -21,7 +21,7 @@ class TBiLSTMConfig(object):
     print_per_batch = 10    # 每多少轮输出一次结果
     save_per_batch = 10      # 每多少轮存入tensorboard
     l2_reg_lambda = 0.01
-    filter_sizes = [1]  # 卷积核大小
+    filter_sizes = [2, 3, 4]  # 卷积核大小
     filter_num = 128  # 卷积核数量
 
 
