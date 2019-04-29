@@ -28,10 +28,13 @@ def batch_iter(x, y, batch_size=128):
     for i in range(num_batch):
         start_id = i * batch_size
         end_id = min((i + 1) * batch_size, data_len)
+        # padding="post", truncating="post"的目的是当sequence length大于max_len时，将大于max_len的部分抛弃
+        # 当sequence length小于max_len时，从末尾开始padding
+        # 如果max_len=None，则pad_sequences会默认按照最长序列的长度padding和truncating
+        x_padded = kr.preprocessing.sequence.pad_sequences(x_shuffle[start_id:end_id], maxlen=config.sequence_length,
+                                                           padding="post", truncating="post")
 
-        x_shuffle_padded = kr.preprocessing.sequence.pad_sequences(x_shuffle[start_id:end_id], maxlen=config.text_size)
-
-        yield x_shuffle_padded, y_shuffle[start_id:end_id]
+        yield x_padded, y_shuffle[start_id:end_id]
 
 
 def feed_data(x_batch, y_batch, keep_prob):
@@ -64,7 +67,7 @@ def evaluate(sess, x_, y_):
     return total_loss / data_len, total_acc / data_len
 
 
-def train(x_train_src, y_train_src, x_val_src, y_val_src, epoch_num, model_save_src):
+def train(x_train_src, y_train_src, x_val_src, y_val_src, model_save_src):
 
     tensorboard_dir = 'tensorboard'
     if not os.path.exists(model_save_src):
@@ -83,9 +86,9 @@ def train(x_train_src, y_train_src, x_val_src, y_val_src, epoch_num, model_save_
     print("Loading training and validation data...")
     # 载入训练集与验证集
     start_time = time.time()
-    x_train = np.load(x_train_src)
+    x_train = np.load(x_train_src, allow_pickle=True)
     y_train = np.load(y_train_src)
-    x_valid = np.load(x_val_src)
+    x_valid = np.load(x_val_src, allow_pickle=True)
     y_valid = np.load(y_val_src)
     time_dif = get_time_dif(start_time)
     print("Time usage:", time_dif)
@@ -101,10 +104,10 @@ def train(x_train_src, y_train_src, x_val_src, y_val_src, epoch_num, model_save_
     total_batch = 0  # 总批次
     best_acc_val = 0.0  # 最佳验证集准确率
     last_improved = 0  # 记录上一次提升批次
-    require_improvement = 1000  # 如果超过1000轮未提升，提前结束训练
+    require_improvement = 150  # 如果超过n个iter未提升，提前结束训练
 
     flag = False
-    for epoch in range(epoch_num):
+    for epoch in range(config.epoch_num):
 
         print("Epoch: {}".format(epoch))
         batch_train = batch_iter(x_train, y_train)
@@ -130,9 +133,13 @@ def train(x_train_src, y_train_src, x_val_src, y_val_src, epoch_num, model_save_
                     saver.save(sess=session, save_path=os.path.join(model_save_src, "best_validation"))
 
                     time_dif = get_time_dif(start_time)
+                    improved_str = '*'
+                else:
+                    improved_str = ''
 
-                print("iter: {}, train loss: {}, train accuracy: {}, val loss: {}, val accuracy: {}, time: {}".format(
-                    total_batch, loss_train, acc_train, loss_valid, acc_valid, time_dif))
+                print("iter: {}, train loss: {}, train accuracy: {}, val loss: {}, val accuracy: {}, "
+                      "time: {} {}".format(total_batch, loss_train, acc_train, loss_valid, acc_valid,
+                                           time_dif, improved_str))
 
             session.run(model.opt, feed_dict=feed_dict)  # 运行优化
             total_batch += 1
@@ -164,13 +171,11 @@ if __name__ == "__main__":
 
     # 验证集
     x_valid_src = "data/vectorized_data/validation/x.npy"
-    y_valid_src = "data/vectorized_data/validation/y.npy"
+    y_valid_src = "fudandata/vectorized_data/validation/y.npy"
 
     # 模型保存
     model_save_src = "data/text_cnn_model"
 
-    epochs = 100
-
-    train(x_train_src, y_train_src, x_valid_src, y_valid_src, epochs, model_save_src)
+    train(x_train_src, y_train_src, x_valid_src, y_valid_src, model_save_src)
 
 

@@ -3,11 +3,10 @@ import tensorflow as tf
 
 class TCNNConfig(object):
     train_batch_size = 128  # 训练数据的batch大小
-    vocab_size = 115082  # 词典大小
-    word_dim = 64  # 词向量维度
-    text_size = 600  # 一个文本的大小（词）
+    vocab_size = None  # 词典大小
+    word_dim = 50  # 词向量维度
+    sequence_length = 600  # 一个文本的大小（词）
     num_category = 9  # 类别数
-    num_dense_units = 9  # 全联接层神经元
     keep_dropout_prob = 0.5
     learning_rate = 0.001
     filter_sizes = [2, 3, 4]  # 卷积核大小
@@ -17,13 +16,14 @@ class TCNNConfig(object):
 
     decay_rate = 0.9  # 学习率衰减率
     decay_steps = 600  # 学习率衰减速率
+    epoch_num = 100
 
 
 class TextCNNModel(object):
     def __init__(self, config):
         self.config = config
 
-        self.input_x = tf.placeholder(dtype=tf.int32, shape=[None, config.text_size], name="input_x")
+        self.input_x = tf.placeholder(dtype=tf.int32, shape=[None, config.sequence_length], name="input_x")
         self.input_y = tf.placeholder(dtype=tf.float32, shape=[None, config.num_category], name="input_y")
         self.keep_dropout_prob = tf.placeholder(tf.float32, name="keep_dropout_prob")
         self.l2_loss = tf.constant(0.0)
@@ -31,7 +31,7 @@ class TextCNNModel(object):
 
         # Embedding
         with tf.device('/cpu:0'):
-            self.embedding = tf.get_variable(name="embedding2", shape=[config.vocab_size, config.word_dim],
+            self.embedding = tf.get_variable(name="embedding", shape=[config.vocab_size, config.word_dim],
                                              dtype=tf.float32)
             # batch_size * text_size * word_dim
             self.word_vectors = tf.nn.embedding_lookup(self.embedding, self.input_x)
@@ -55,7 +55,7 @@ class TextCNNModel(object):
                 h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
                 # 池化
                 # dim = [None, 1, 1, num_filter]
-                pooling = tf.nn.max_pool(value=h, ksize=[1, config.text_size-filter_size+1, 1, 1],
+                pooling = tf.nn.max_pool(value=h, ksize=[1, config.sequence_length-filter_size+1, 1, 1],
                                          strides=[1, 1, 1, 1], padding="VALID", name="pooling")
                 self.pooling_list.append(pooling)
 

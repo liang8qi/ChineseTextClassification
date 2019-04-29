@@ -28,6 +28,21 @@ def get_time_dif(start_time):
     return timedelta(seconds=int(round(time_dif)))
 
 
+def batch_iter(x, y, batch_size=128):
+    data_len = len(x)
+    num_batch = int((data_len - 1) / batch_size) + 1
+    for i in range(num_batch):
+        start_id = i * batch_size
+        end_id = min((i + 1) * batch_size, data_len)
+        max_len = config.sequence_length
+        # padding="pre", truncating="post"的目的是当sequence length大于max_len时，将大于max_len的部分抛弃
+        # 当sequence length小于max_len时，从起始位置开始padding
+        # 如果max_len=None，则pad_sequences会默认按照最长序列的长度padding和truncating
+        x_padded = kr.preprocessing.sequence.pad_sequences(x[start_id:end_id], maxlen=max_len,
+                                                           padding="pre", truncating="post")
+        yield x_padded, y[start_id:end_id]
+
+
 def evaluate(label, prediction):
 
     # 标记为Yes 属于
@@ -63,36 +78,20 @@ def evaluate(label, prediction):
     return precision_score, recall_score, f1_val, right_num/label_num
 
 
-def result_analysis(mistake_file_src, vocab_src):
-    vocab = np.load(vocab_src)
-    file_list = np.load(mistake_file_src)
-    if not len(file_list):
-        return
-    for file in file_list:
-
-        cnt = 0  # 在字典中的词数
-        with open(file[0], "r", encoding="utf-8") as f:
-            words = f.readline().strip().split(" ")
-            word_num = len(words)
-            for word in words:
-                if word in vocab:
-                    cnt += 1
-        print("file: {}, prediction: {}, label: {}, {} {}".format(file[0], file[1], file[2], word_num, cnt))
-
-
 def feed_data(x, y):
-    x = kr.preprocessing.sequence.pad_sequences(x, maxlen=config.text_size)
     feed_dict = {
         model.input_x: x,
         model.input_y: y,
-        model.keep_dropout_prob: 1
+        model.keep_dropout_prob: 1.0
     }
     return feed_dict
 
 
 def test(x_src, y_src, result_src):
-    x = np.load(x_src)
+    x = np.load(x_src, allow_pickle=True)
     y = np.load(y_src)
+    data_len = len(x)
+
     saver = tf.train.Saver()
     with tf.Session() as session:
         session.run(tf.global_variables_initializer())
@@ -100,23 +99,31 @@ def test(x_src, y_src, result_src):
         saver.restore(session, os.path.join(model_save_src, "best_validation"))
 
         print("Testing")
+        total_loss = 0.0
+        total_acc = 0.0
+        total_y_pre = []
+        batch_train = batch_iter(x, y)
+        for x_batch, y_batch in batch_train:
+            batch_len = len(x_batch)
+            feed_dict = feed_data(x_batch, y_batch)
+            y_pre, loss, acc = session.run([model.y_pred, model.loss, model.acc], feed_dict=feed_dict)
+            total_loss += loss * batch_len
+            total_acc += acc * batch_len
+            total_y_pre.extend(y_pre)
 
-        feed_dict = feed_data(x, y)
-        y_pre, loss, accuracy = session.run([model.y_pred, model.loss, model.acc], feed_dict=feed_dict)
-
-        print("the loss is {}, the accuracy is {}".format(loss, accuracy))
-        np.save(result_src, y_pre)
-        return y, y_pre
+        print("the loss is {}, the accuracy is {}".format(total_loss/data_len, total_acc/data_len))
+        np.save(result_src, total_y_pre)
+        return y, total_y_pre
 
 
 if __name__ == "__main__":
     # 模型路径
-    model_save_src = "data/text_cnn_model"
+    model_save_src = "fudandata/text_cnn_model"
     num_category = 9
     x_src = "data/vectorized_data/test/x.npy"
     y_src = "data/vectorized_data/test/y.npy"
 
-    result_src = "data/results/test_pre.npy"
+    result_src = "data/results/test_cnn_pre.npy"
     vocab_src = "data/middle_result/vocab.npy"
     data = Data()
     vocab, _ = data.load_vocab(vocab_src)

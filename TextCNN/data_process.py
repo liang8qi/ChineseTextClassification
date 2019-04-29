@@ -1,7 +1,7 @@
 import re
 import os
 import numpy as np
-import pynlpir
+import jieba
 import random
 import tensorflow.contrib.keras as kr
 
@@ -35,7 +35,7 @@ class Data(object):
     @staticmethod
     def clean_sentence(sentence):
         # 抽出中文字符及数字
-        sentence = re.sub(r"[^\u4E00-\u9FD5a-zA-Z]", " ", sentence)
+        sentence = re.sub(r"[^\u4E00-\u9FD5]", " ", sentence)
 
         return sentence.strip()
 
@@ -56,8 +56,8 @@ class Data(object):
 
         output_file = open(output_src, "a", encoding="utf-8")
         for sentence in sentence_list:
-            # words = list(jieba.cut(sentence))
-            words = pynlpir.segment(sentence, pos_tagging=False)
+
+            words = jieba.lcut(sentence)
             sentence_segment = []
             for word in words:
                 if not len(word):
@@ -77,7 +77,7 @@ class Data(object):
         data_set = {}
         dir_list = os.listdir(dirs_src)
         invalid_files = []
-        pynlpir.open()
+
         for dir_name in dir_list:
             if dir_name not in categories:
                 continue
@@ -105,10 +105,8 @@ class Data(object):
                     data_set[str(category)].append(output_file_src)
                     print("{} is cut successfully".format(output_file_src))
                 else:
-                    # print("{} is Null".format(input_file_src))
                     invalid_files.append(input_file_src)
 
-        pynlpir.close()
         if len(invalid_files) > 0:
             print("无效文件:")
             for file in invalid_files:
@@ -182,7 +180,7 @@ class Data(object):
     @staticmethod
     def text_vectorization(file_src, vocab, word_to_id):
         text_vector = []
-        label = int(file_src[-1])  # 9类 最后一位为类别
+        label = int(file_src.split(".")[-1])  # 类别 最后一位为类别
         text_len = 0
         with open(file_src, "r", encoding="utf-8") as f:
             lines = f.readline().strip()
@@ -214,8 +212,7 @@ class Data(object):
             text_len_list.append(text_len)
             print(cnt)
             cnt += 1
-        # 将文本pad为固定长度
-        # x_pad = kr.preprocessing.sequence.pad_sequences(x_list, max_len)
+
         y_pad = kr.utils.to_categorical(y_list, num_classes=num_category)  # 将标签转换为one-hot表示 9类
         # 保存以便多次使用
         np.save(os.path.join(output_src, "x.npy"), x_list)
@@ -224,33 +221,46 @@ class Data(object):
 
         print("the dataset {} vectorization is finished".format(data_set_src))
 
+    @staticmethod
+    def get_sequence_length(x_batch):
+
+        sequence_lengths = []
+        for x in x_batch:
+            actual_length = np.sum(np.sign(x))
+            sequence_lengths.append(actual_length)
+        return sequence_lengths
+
 
 if __name__ == "__main__":
 
     data = Data()
+    # 源数据集路径
     dirs_src = "data/sougoudataset"
+    # 分词后的存储路径
     output_src = "data/pynlpir"
+    # 停用词
     stop_words_src = "data/stopwords.txt"
-
+    # 词典的存储路径
+    vocab_src = "data/middle_result/vocab.npy"
+    # 加载停用词
     stop_words = data.load_stop_words(stop_words_src)
     # 分词
-    # data.batch_process(dirs_src, output_src, stop_words)
+    data.batch_process(dirs_src, output_src, stop_words)
 
     # 划分数据集
     file_list_src = os.path.join(output_src, "file_list.npy")
     proportion = [0.7, 0.2]
     divided_files_list_src = "data/file_list"
-    # data.divide_data_set(file_list_src, divided_files_list_src, proportion)
+    data.divide_data_set(file_list_src, divided_files_list_src, proportion)
 
     # 建立词典
-    vocab_src = "data/middle_result/vocab_small.npy"
-    # data.build_vocab(os.path.join(divided_files_list_src, "train_file_list.npy"), vocab_src)
+    data.build_vocab(os.path.join(divided_files_list_src, "train_file_list.npy"), vocab_src)
 
     # 加载词典
     vocab, word_to_id = data.load_vocab(vocab_src)
-    print(len(vocab))
 
     # 训练集向量化
+    # 向量化后的存储路径
     train_src = "data/vectorized_data/train"
     data.batch_vectorization(os.path.join(divided_files_list_src, "train_file_list.npy"),
                              vocab, word_to_id, train_src)
