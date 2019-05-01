@@ -1,5 +1,5 @@
 # ChineseTextClassification
-Several methods to solve text classification problems
+几种文本分类方法
 ## 1、前言
 刚开始接触NLP，选择从最基础的文本分类入手，完全小白一个，一开始连如何处理数据都不知道，
 TensorFlow也不会，在写代码的过程中，也参考了很多别人的代码，尤其感谢[gaussic](https://github.com/gaussic/text-classification-cnn-rnn)
